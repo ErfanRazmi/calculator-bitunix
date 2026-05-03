@@ -379,21 +379,19 @@ export default function FuturesCalculator({ data }) {
                   <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Opening Fees</h3>
-                      <select 
-                        value={tradeInputs.openFeeType} 
-                        onChange={e => setTradeInputs(p => ({...p, openFeeType: e.target.value}))}
-                        className="text-xs font-bold bg-white border border-gray-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-[#B9F641] cursor-pointer"
-                      >
-                        <option value="taker">Taker</option>
-                        <option value="maker">Maker</option>
-                      </select>
                     </div>
                     <div className="space-y-4">
-                      <div className={`flex justify-between items-center bg-white p-4 rounded-xl border transition-colors ${tradeInputs.openFeeType === 'maker' ? 'border-[#B9F641] ring-1 ring-[#B9F641] shadow-sm' : 'border-gray-100'}`}>
+                      <div 
+                        onClick={() => setTradeInputs(p => ({...p, openFeeType: 'maker'}))}
+                        className={`flex justify-between items-center bg-white p-4 rounded-xl border transition-colors cursor-pointer hover:border-[#B9F641]/50 ${tradeInputs.openFeeType === 'maker' ? 'border-[#B9F641] ring-1 ring-[#B9F641] shadow-sm' : 'border-gray-100'}`}
+                      >
                         <span className="text-gray-600 font-medium">Maker Fee</span>
                         <span className="font-bold text-gray-900">${feeCalcs.openMaker.toFixed(4)}</span>
                       </div>
-                      <div className={`flex justify-between items-center bg-white p-4 rounded-xl border transition-colors ${tradeInputs.openFeeType === 'taker' ? 'border-[#B9F641] ring-1 ring-[#B9F641] shadow-sm' : 'border-gray-100'}`}>
+                      <div 
+                        onClick={() => setTradeInputs(p => ({...p, openFeeType: 'taker'}))}
+                        className={`flex justify-between items-center bg-white p-4 rounded-xl border transition-colors cursor-pointer hover:border-[#B9F641]/50 ${tradeInputs.openFeeType === 'taker' ? 'border-[#B9F641] ring-1 ring-[#B9F641] shadow-sm' : 'border-gray-100'}`}
+                      >
                         <span className="text-gray-600 font-medium">Taker Fee</span>
                         <span className="font-bold text-gray-900">${feeCalcs.openTaker.toFixed(4)}</span>
                       </div>
@@ -403,21 +401,19 @@ export default function FuturesCalculator({ data }) {
                   <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Closing Fees</h3>
-                      <select 
-                        value={tradeInputs.closeFeeType} 
-                        onChange={e => setTradeInputs(p => ({...p, closeFeeType: e.target.value}))}
-                        className="text-xs font-bold bg-white border border-gray-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-[#B9F641] cursor-pointer"
-                      >
-                        <option value="taker">Taker</option>
-                        <option value="maker">Maker</option>
-                      </select>
                     </div>
                     <div className="space-y-4">
-                      <div className={`flex justify-between items-center bg-white p-4 rounded-xl border transition-colors ${tradeInputs.closeFeeType === 'maker' ? 'border-[#B9F641] ring-1 ring-[#B9F641] shadow-sm' : 'border-gray-100'}`}>
+                      <div 
+                        onClick={() => setTradeInputs(p => ({...p, closeFeeType: 'maker'}))}
+                        className={`flex justify-between items-center bg-white p-4 rounded-xl border transition-colors cursor-pointer hover:border-[#B9F641]/50 ${tradeInputs.closeFeeType === 'maker' ? 'border-[#B9F641] ring-1 ring-[#B9F641] shadow-sm' : 'border-gray-100'}`}
+                      >
                         <span className="text-gray-600 font-medium">Maker Fee</span>
                         <span className="font-bold text-gray-900">${feeCalcs.closeMaker.toFixed(4)}</span>
                       </div>
-                      <div className={`flex justify-between items-center bg-white p-4 rounded-xl border transition-colors ${tradeInputs.closeFeeType === 'taker' ? 'border-[#B9F641] ring-1 ring-[#B9F641] shadow-sm' : 'border-gray-100'}`}>
+                      <div 
+                        onClick={() => setTradeInputs(p => ({...p, closeFeeType: 'taker'}))}
+                        className={`flex justify-between items-center bg-white p-4 rounded-xl border transition-colors cursor-pointer hover:border-[#B9F641]/50 ${tradeInputs.closeFeeType === 'taker' ? 'border-[#B9F641] ring-1 ring-[#B9F641] shadow-sm' : 'border-gray-100'}`}
+                      >
                         <span className="text-gray-600 font-medium">Taker Fee</span>
                         <span className="font-bold text-gray-900">${feeCalcs.closeTaker.toFixed(4)}</span>
                       </div>
