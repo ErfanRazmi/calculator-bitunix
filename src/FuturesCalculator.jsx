@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  Calculator, TrendingUp, TrendingDown, DollarSign, 
+  Calculator, TrendingUp, TrendingDown, 
   Settings, Info, ArrowRightLeft, BarChart3, 
   ShieldCheck, UserCheck, Percent, Layers, ChevronDown, Copy, Terminal, Sun, Moon
 } from 'lucide-react';
@@ -55,9 +55,11 @@ const InputField = ({ label, value, onChange, icon: Icon, suffix }) => (
   <div className="mb-4">
     <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5 tracking-wider">{label}</label>
     <div className="relative">
-      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none">
-        <Icon size={18} />
-      </div>
+      {Icon && (
+        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none">
+          <Icon size={18} />
+        </div>
+      )}
       <input 
         type="number" 
         value={value === 0 ? '' : value} 
@@ -65,10 +67,10 @@ const InputField = ({ label, value, onChange, icon: Icon, suffix }) => (
           const val = e.target.value;
           onChange(val === '' ? 0 : parseFloat(val));
         }} 
-        className="w-full pl-11 pr-12 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:bg-white dark:focus:bg-gray-900 focus:border-[#B9F641] focus:ring-4 focus:ring-[#B9F641]/20 outline-none transition-all duration-200 text-gray-800 dark:text-white font-medium shadow-sm" 
+        className={`w-full ${Icon ? 'pl-11' : 'pl-4'} ${suffix ? 'pr-14' : 'pr-4'} py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:bg-white dark:focus:bg-gray-900 focus:border-[#B9F641] focus:ring-4 focus:ring-[#B9F641]/20 outline-none transition-all duration-200 text-gray-800 dark:text-white font-medium shadow-sm`} 
         placeholder="0.00"
       />
-      {suffix && <div className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 text-sm font-medium pointer-events-none">{suffix}</div>}
+      {suffix && <div className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 text-xs font-bold pointer-events-none">{suffix}</div>}
     </div>
   </div>
 );
@@ -174,27 +176,27 @@ export default function FuturesCalculator({ data }) {
   ];
 
   const pnlScriptsNet = [
-    `Hello! Based on a position size of ${tradeInputs.size} at $${tradeInputs.openingPrice}, your estimated Net PnL (after fees) when closing at $${tradeInputs.closingPrice} would be $${feeCalcs.netPnl.toFixed(2)}.`,
-    `Hi there. Using ${tradeInputs.leverage}x leverage, your initial margin is $${feeCalcs.initialMargin.toFixed(2)}. The Net profit/loss for this trade is calculated at $${feeCalcs.netPnl.toFixed(2)}.`,
-    `If your trade hits the $${tradeInputs.closingPrice} target, your net Return on Investment (ROI) after fee deduction will be approximately ${feeCalcs.netRoi.toFixed(2)}%.`,
-    `To answer your question about PnL: a ${tradeInputs.size} unit trade results in a Net PnL of $${feeCalcs.netPnl.toFixed(2)}, taking into account $${feeCalcs.totalFees.toFixed(2)} in total fees.`,
-    `Your Net PnL is calculated by subtracting your total estimated fees ($${feeCalcs.totalFees.toFixed(2)}) from your raw PnL ($${feeCalcs.pnl.toFixed(2)}), giving you exactly $${feeCalcs.netPnl.toFixed(2)}.`
+    `Hello! Based on a position size of ${tradeInputs.size} at ${tradeInputs.openingPrice} USDT, your estimated Net PnL (after fees) when closing at ${tradeInputs.closingPrice} USDT would be ${feeCalcs.netPnl.toFixed(2)} USDT.`,
+    `Hi there. Using ${tradeInputs.leverage}x leverage, your initial margin is ${feeCalcs.initialMargin.toFixed(2)} USDT. The Net profit/loss for this trade is calculated at ${feeCalcs.netPnl.toFixed(2)} USDT.`,
+    `If your trade hits the ${tradeInputs.closingPrice} USDT target, your net Return on Investment (ROI) after fee deduction will be approximately ${feeCalcs.netRoi.toFixed(2)}%.`,
+    `To answer your question about PnL: a ${tradeInputs.size} unit trade results in a Net PnL of ${feeCalcs.netPnl.toFixed(2)} USDT, taking into account ${feeCalcs.totalFees.toFixed(2)} USDT in total fees.`,
+    `Your Net PnL is calculated by subtracting your total estimated fees (${feeCalcs.totalFees.toFixed(2)} USDT) from your raw PnL (${feeCalcs.pnl.toFixed(2)} USDT), giving you exactly ${feeCalcs.netPnl.toFixed(2)} USDT.`
   ];
 
   const feeSteps = [
     { label: 'Open Fee Rate', formula: `${tradeInputs.openFeeType === 'maker' ? 'Maker' : 'Taker'} Rate (VIP Level: ${tradeInputs.vipLevel})`, result: `${((tradeInputs.openFeeType === 'maker' ? currentVip.maker : currentVip.taker) * 100).toFixed(4)}%` },
-    { label: 'Open Fee', formula: `${tradeInputs.size} * $${tradeInputs.openingPrice} * Open Rate`, result: `$${feeCalcs.openFee.toFixed(4)}` },
+    { label: 'Open Fee', formula: `${tradeInputs.size} * ${tradeInputs.openingPrice} USDT * Open Rate`, result: `${feeCalcs.openFee.toFixed(4)} USDT` },
     { label: 'Close Fee Rate', formula: `${tradeInputs.closeFeeType === 'maker' ? 'Maker' : 'Taker'} Rate (VIP Level: ${tradeInputs.vipLevel})`, result: `${((tradeInputs.closeFeeType === 'maker' ? currentVip.maker : currentVip.taker) * 100).toFixed(4)}%` },
-    { label: 'Close Fee', formula: `${tradeInputs.size} * $${tradeInputs.closingPrice} * Close Rate`, result: `$${feeCalcs.closeFee.toFixed(4)}` },
-    { label: 'Total Estimated Fees', formula: `$${feeCalcs.openFee.toFixed(4)} + $${feeCalcs.closeFee.toFixed(4)}`, result: `$${feeCalcs.totalFees.toFixed(4)}` }
+    { label: 'Close Fee', formula: `${tradeInputs.size} * ${tradeInputs.closingPrice} USDT * Close Rate`, result: `${feeCalcs.closeFee.toFixed(4)} USDT` },
+    { label: 'Total Estimated Fees', formula: `${feeCalcs.openFee.toFixed(4)} USDT + ${feeCalcs.closeFee.toFixed(4)} USDT`, result: `${feeCalcs.totalFees.toFixed(4)} USDT` }
   ];
 
   const feeScripts = [
-    `Hello! As a ${tradeInputs.vipLevel} user, your estimated total trading fees for this position will be $${feeCalcs.totalFees.toFixed(4)}.`,
-    `Hi. Your opening fee (as a ${tradeInputs.openFeeType}) is $${feeCalcs.openFee.toFixed(4)}, and your closing fee (as a ${tradeInputs.closeFeeType}) is $${feeCalcs.closeFee.toFixed(4)}.`,
+    `Hello! As a ${tradeInputs.vipLevel} user, your estimated total trading fees for this position will be ${feeCalcs.totalFees.toFixed(4)} USDT.`,
+    `Hi. Your opening fee (as a ${tradeInputs.openFeeType}) is ${feeCalcs.openFee.toFixed(4)} USDT, and your closing fee (as a ${tradeInputs.closeFeeType}) is ${feeCalcs.closeFee.toFixed(4)} USDT.`,
     `Based on your VIP level (${tradeInputs.vipLevel}), your maker fee is ${(currentVip.maker * 100).toFixed(3)}% and taker fee is ${(currentVip.taker * 100).toFixed(3)}%.`,
-    `The total fee deduction for your ${tradeInputs.size} unit trade opening at $${tradeInputs.openingPrice} and closing at $${tradeInputs.closingPrice} is $${feeCalcs.totalFees.toFixed(4)}.`,
-    `To calculate your fee: we multiply your position size by the entry/exit price and your VIP fee tier rate. For this trade, it equals $${feeCalcs.totalFees.toFixed(4)}.`
+    `The total fee deduction for your ${tradeInputs.size} unit trade opening at ${tradeInputs.openingPrice} USDT and closing at ${tradeInputs.closingPrice} USDT is ${feeCalcs.totalFees.toFixed(4)} USDT.`,
+    `To calculate your fee: we multiply your position size by the entry/exit price and your VIP fee tier rate. For this trade, it equals ${feeCalcs.totalFees.toFixed(4)} USDT.`
   ];
 
   const generateLiqSteps = (type, inputs, liqPrice) => {
@@ -210,7 +212,7 @@ export default function FuturesCalculator({ data }) {
       { label: 'Step 1: Plug in values', formula: `${entryPrice} ${sign} ((${availableMargin} - (${size} × ${mmrDec} × ${entryPrice})) ÷ ${size})` },
       { label: 'Step 2: Calculate MM Value', formula: `${entryPrice} ${sign} ((${availableMargin} - ${mmValue.toFixed(4)}) ÷ ${size})` },
       { label: 'Step 3: Subtract from Margin', formula: `${entryPrice} ${sign} (${marginMinusMM.toFixed(4)} ÷ ${size})` },
-      { label: 'Step 4: Divide by Size', formula: `${entryPrice} ${sign} ${Math.abs(dividedBySize).toFixed(4)}`, result: `~${liqPrice.toFixed(4)}` }
+      { label: 'Step 4: Divide by Size', formula: `${entryPrice} ${sign} ${Math.abs(dividedBySize).toFixed(4)}`, result: `~${liqPrice.toFixed(4)} USDT` }
     ];
   };
 
@@ -218,18 +220,17 @@ export default function FuturesCalculator({ data }) {
   const liqStepsShort = generateLiqSteps('short', shortInputs, liqPriceShort);
 
   const liqScriptsLong = [
-    `Hello! Based on your position size of ${longInputs.size} and available margin of $${longInputs.availableMargin}, the liquidation price for your Long position at $${longInputs.entryPrice} is approximately $${liqPriceLong.toFixed(2)}.`,
-    `Liquidation happens when your margin ratio hits 100%. For your Long position, this occurs at a mark price of $${liqPriceLong.toFixed(2)}.`,
-    `To calculate your liquidation price, we use your entry price, position size, available margin, and the Maintenance Margin Rate (MMR). Based on those factors, your Long position liquidation is $${liqPriceLong.toFixed(2)}.`
+    `Hello! Based on your position size of ${longInputs.size} and available margin of ${longInputs.availableMargin} USDT, the liquidation price for your Long position at ${longInputs.entryPrice} USDT is approximately ${liqPriceLong.toFixed(2)} USDT.`,
+    `Liquidation happens when your margin ratio hits 100%. For your Long position, this occurs at a mark price of ${liqPriceLong.toFixed(2)} USDT.`,
+    `To calculate your liquidation price, we use your entry price, position size, available margin, and the Maintenance Margin Rate (MMR). Based on those factors, your Long position liquidation is ${liqPriceLong.toFixed(2)} USDT.`
   ];
 
   const liqScriptsShort = [
-    `Hi there. For your Short position entered at $${shortInputs.entryPrice}, with $${shortInputs.availableMargin} in available margin, liquidation will be triggered if the price reaches $${liqPriceShort.toFixed(2)}.`,
-    `Please note that your Short position will be liquidated at $${liqPriceShort.toFixed(2)}. You can add more margin to your Available Margin to delay this liquidation.`,
-    `To calculate your liquidation price, we use your entry price, position size, available margin, and the Maintenance Margin Rate (MMR). Based on those factors, your Short position liquidation is $${liqPriceShort.toFixed(2)}.`
+    `Hi there. For your Short position entered at ${shortInputs.entryPrice} USDT, with ${shortInputs.availableMargin} USDT in available margin, liquidation will be triggered if the price reaches ${liqPriceShort.toFixed(2)} USDT.`,
+    `Please note that your Short position will be liquidated at ${liqPriceShort.toFixed(2)} USDT. You can add more margin to your Available Margin to delay this liquidation.`,
+    `To calculate your liquidation price, we use your entry price, position size, available margin, and the Maintenance Margin Rate (MMR). Based on those factors, your Short position liquidation is ${liqPriceShort.toFixed(2)} USDT.`
   ];
 
-  // Using a normal render function instead of a Component so it doesn't unmount
   const renderSharedInputs = () => (
     <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-6">
       <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-50 dark:border-gray-800">
@@ -239,8 +240,8 @@ export default function FuturesCalculator({ data }) {
       
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-2">
         <InputField label="Position Size" icon={Layers} value={tradeInputs.size} onChange={v => setTradeInputs(p => ({...p, size: v}))} suffix="Units" />
-        <InputField label="Opening Price" icon={DollarSign} value={tradeInputs.openingPrice} onChange={v => setTradeInputs(p => ({...p, openingPrice: v}))} />
-        <InputField label="Closing Price" icon={DollarSign} value={tradeInputs.closingPrice} onChange={v => setTradeInputs(p => ({...p, closingPrice: v}))} />
+        <InputField label="Opening Price" value={tradeInputs.openingPrice} onChange={v => setTradeInputs(p => ({...p, openingPrice: v}))} suffix="USDT" />
+        <InputField label="Closing Price" value={tradeInputs.closingPrice} onChange={v => setTradeInputs(p => ({...p, closingPrice: v}))} suffix="USDT" />
         <InputField label="Leverage" icon={BarChart3} value={tradeInputs.leverage} onChange={v => setTradeInputs(p => ({...p, leverage: v}))} suffix="x" />
         
         <div className="mb-4">
@@ -399,7 +400,7 @@ export default function FuturesCalculator({ data }) {
                       </div>
                     </div>
                     <p className={`text-5xl font-black tracking-tight mb-2 relative z-10 ${(pnlType === 'net' ? feeCalcs.netPnl : feeCalcs.pnl) >= 0 ? 'text-white dark:text-gray-100' : 'text-red-400'}`}>
-                      {(pnlType === 'net' ? feeCalcs.netPnl : feeCalcs.pnl) >= 0 ? '+' : ''}${(pnlType === 'net' ? feeCalcs.netPnl : feeCalcs.pnl).toFixed(2)}
+                      {(pnlType === 'net' ? feeCalcs.netPnl : feeCalcs.pnl) >= 0 ? '+' : ''}{(pnlType === 'net' ? feeCalcs.netPnl : feeCalcs.pnl).toFixed(2)} USDT
                     </p>
                     <p className="text-gray-400 font-medium relative z-10">{pnlType === 'net' ? 'Profit & Loss after total fees' : 'Profit & Loss before fees'}</p>
                   </div>
@@ -450,11 +451,11 @@ export default function FuturesCalculator({ data }) {
                       <div className="space-y-4">
                         <div className={`flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl border transition-colors ${tradeInputs.openFeeType === 'maker' ? 'border-[#B9F641] ring-1 ring-[#B9F641] shadow-sm' : 'border-gray-100 dark:border-gray-700'}`}>
                           <span className="text-gray-600 dark:text-gray-400 font-medium">Maker Fee</span>
-                          <span className="font-bold text-gray-900 dark:text-white">${feeCalcs.openMaker.toFixed(4)}</span>
+                          <span className="font-bold text-gray-900 dark:text-white">{feeCalcs.openMaker.toFixed(4)} USDT</span>
                         </div>
                         <div className={`flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl border transition-colors ${tradeInputs.openFeeType === 'taker' ? 'border-[#B9F641] ring-1 ring-[#B9F641] shadow-sm' : 'border-gray-100 dark:border-gray-700'}`}>
                           <span className="text-gray-600 dark:text-gray-400 font-medium">Taker Fee</span>
-                          <span className="font-bold text-gray-900 dark:text-white">${feeCalcs.openTaker.toFixed(4)}</span>
+                          <span className="font-bold text-gray-900 dark:text-white">{feeCalcs.openTaker.toFixed(4)} USDT</span>
                         </div>
                       </div>
                     </div>
@@ -474,11 +475,11 @@ export default function FuturesCalculator({ data }) {
                       <div className="space-y-4">
                         <div className={`flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl border transition-colors ${tradeInputs.closeFeeType === 'maker' ? 'border-[#B9F641] ring-1 ring-[#B9F641] shadow-sm' : 'border-gray-100 dark:border-gray-700'}`}>
                           <span className="text-gray-600 dark:text-gray-400 font-medium">Maker Fee</span>
-                          <span className="font-bold text-gray-900 dark:text-white">${feeCalcs.closeMaker.toFixed(4)}</span>
+                          <span className="font-bold text-gray-900 dark:text-white">{feeCalcs.closeMaker.toFixed(4)} USDT</span>
                         </div>
                         <div className={`flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl border transition-colors ${tradeInputs.closeFeeType === 'taker' ? 'border-[#B9F641] ring-1 ring-[#B9F641] shadow-sm' : 'border-gray-100 dark:border-gray-700'}`}>
                           <span className="text-gray-600 dark:text-gray-400 font-medium">Taker Fee</span>
-                          <span className="font-bold text-gray-900 dark:text-white">${feeCalcs.closeTaker.toFixed(4)}</span>
+                          <span className="font-bold text-gray-900 dark:text-white">{feeCalcs.closeTaker.toFixed(4)} USDT</span>
                         </div>
                       </div>
                     </div>
@@ -490,7 +491,7 @@ export default function FuturesCalculator({ data }) {
                       <p className="text-sm text-gray-600 dark:text-gray-400">Based on {tradeInputs.openFeeType} open and {tradeInputs.closeFeeType} close.</p>
                     </div>
                     <div className="text-3xl font-black text-gray-900 dark:text-white">
-                      ${feeCalcs.totalFees.toFixed(4)}
+                      {feeCalcs.totalFees.toFixed(4)} USDT
                     </div>
                   </div>
                 </div>
@@ -502,7 +503,10 @@ export default function FuturesCalculator({ data }) {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Long Position */}
-                <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden group hover:border-[#B9F641]/50 transition-colors">
+                <div 
+                  onClick={() => setLiqScriptTab('long')}
+                  className={`bg-white dark:bg-gray-900 p-8 rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden group transition-all cursor-pointer ${liqScriptTab === 'long' ? 'border-[#B9F641] ring-2 ring-[#B9F641]/30' : 'border-gray-100 dark:border-gray-800 hover:border-[#B9F641]/50'}`}
+                >
                   <div className="absolute top-0 left-0 w-full h-1.5 bg-[#B9F641]"></div>
                   <div className="flex items-center gap-3 mb-8">
                     <div className="bg-[#B9F641]/20 p-2.5 rounded-xl text-green-700 dark:text-green-500">
@@ -512,20 +516,23 @@ export default function FuturesCalculator({ data }) {
                   </div>
                   
                   <div className="space-y-5 mb-8">
-                    <InputField label="Avg. Open Price" icon={DollarSign} value={longInputs.entryPrice} onChange={v => setLongInputs(p => ({...p, entryPrice: v}))} />
+                    <InputField label="Avg. Open Price" value={longInputs.entryPrice} onChange={v => setLongInputs(p => ({...p, entryPrice: v}))} suffix="USDT" />
                     <InputField label="Position Size" icon={Layers} value={longInputs.size} onChange={v => setLongInputs(p => ({...p, size: v}))} />
-                    <InputField label="Available Margin" icon={DollarSign} value={longInputs.availableMargin} onChange={v => setLongInputs(p => ({...p, availableMargin: v}))} />
+                    <InputField label="Available Margin" value={longInputs.availableMargin} onChange={v => setLongInputs(p => ({...p, availableMargin: v}))} suffix="USDT" />
                     <InputField label="Maintenance Margin Rate (MMR)" icon={Percent} value={longInputs.mmr} onChange={v => setLongInputs(p => ({...p, mmr: v}))} suffix="%" />
                   </div>
                   
                   <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 group-hover:bg-[#B9F641]/5 transition-colors">
                     <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2">Liquidation Price</p>
-                    <p className="text-4xl font-black text-gray-900 dark:text-white">${liqPriceLong.toFixed(2)}</p>
+                    <p className="text-4xl font-black text-gray-900 dark:text-white">{liqPriceLong.toFixed(2)} USDT</p>
                   </div>
                 </div>
 
                 {/* Short Position */}
-                <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden group hover:border-red-400/50 transition-colors">
+                <div 
+                  onClick={() => setLiqScriptTab('short')}
+                  className={`bg-white dark:bg-gray-900 p-8 rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden group transition-all cursor-pointer ${liqScriptTab === 'short' ? 'border-red-400 ring-2 ring-red-400/30' : 'border-gray-100 dark:border-gray-800 hover:border-red-400/50'}`}
+                >
                   <div className="absolute top-0 left-0 w-full h-1.5 bg-red-400"></div>
                   <div className="flex items-center gap-3 mb-8">
                     <div className="bg-red-50 dark:bg-red-900/20 p-2.5 rounded-xl text-red-500 dark:text-red-400">
@@ -535,15 +542,15 @@ export default function FuturesCalculator({ data }) {
                   </div>
                   
                   <div className="space-y-5 mb-8">
-                    <InputField label="Avg. Open Price" icon={DollarSign} value={shortInputs.entryPrice} onChange={v => setShortInputs(p => ({...p, entryPrice: v}))} />
+                    <InputField label="Avg. Open Price" value={shortInputs.entryPrice} onChange={v => setShortInputs(p => ({...p, entryPrice: v}))} suffix="USDT" />
                     <InputField label="Position Size" icon={Layers} value={shortInputs.size} onChange={v => setShortInputs(p => ({...p, size: v}))} />
-                    <InputField label="Available Margin" icon={DollarSign} value={shortInputs.availableMargin} onChange={v => setShortInputs(p => ({...p, availableMargin: v}))} />
+                    <InputField label="Available Margin" value={shortInputs.availableMargin} onChange={v => setShortInputs(p => ({...p, availableMargin: v}))} suffix="USDT" />
                     <InputField label="Maintenance Margin Rate (MMR)" icon={Percent} value={shortInputs.mmr} onChange={v => setShortInputs(p => ({...p, mmr: v}))} suffix="%" />
                   </div>
                   
                   <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 group-hover:bg-red-50 dark:group-hover:bg-red-900/10 transition-colors">
                     <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2">Liquidation Price</p>
-                    <p className="text-4xl font-black text-gray-900 dark:text-white">${liqPriceShort.toFixed(2)}</p>
+                    <p className="text-4xl font-black text-gray-900 dark:text-white">{liqPriceShort.toFixed(2)} USDT</p>
                   </div>
                 </div>
               </div>
