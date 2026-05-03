@@ -377,7 +377,7 @@ export default function FuturesCalculator({ data }) {
                 <div className="bg-white dark:bg-gray-900 p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-[0_4px_15px_rgb(0,0,0,0.06)] flex justify-center w-full max-w-sm mx-auto mb-6">
                   <button 
                     onClick={() => setPnlType('raw')}
-                    className={`flex-1 py-2 px-4 rounded-xl font-bold text-sm transition-all duration-200 ${pnlType === 'raw' ? 'bg-gray-900 dark:bg-gray-800 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+                    className={`flex-1 py-2 px-4 rounded-xl font-bold text-sm transition-all duration-200 ${pnlType === 'raw' ? 'bg-gray-900 dark:bg-gray-700 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
                   >
                     Raw PnL
                   </button>
@@ -390,7 +390,7 @@ export default function FuturesCalculator({ data }) {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-gray-900 dark:bg-gray-800 p-8 rounded-3xl shadow-xl relative overflow-hidden group border border-gray-900 dark:border-gray-700">
+                  <div className="bg-gray-900 dark:bg-gray-900 p-8 rounded-3xl shadow-xl relative overflow-hidden group border border-gray-900 dark:border-gray-800">
                     <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-[#B9F641] rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-500"></div>
                     <div className="flex justify-between items-start mb-4 relative z-10">
                       <p className="text-sm font-bold text-gray-300 dark:text-gray-400 uppercase tracking-widest">Estimated PnL {pnlType === 'net' ? '(Net)' : '(Raw)'}</p>
