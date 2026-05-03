@@ -130,8 +130,8 @@ export default function FuturesCalculator({ data }) {
     ];
   }, []);
 
-  const [longInputs, setLongInputs] = useState({ entryPrice: 62305.3, size: 0.0143, availableMargin: 43.303, mmr: 0.4, marginMode: 'cross', leverage: 10 });
-  const [shortInputs, setShortInputs] = useState({ entryPrice: 4.386, size: 77, availableMargin: 6.622, mmr: 1, marginMode: 'cross', leverage: 10 });
+  const [longInputs, setLongInputs] = useState({ entryPrice: 62305.3, size: 0.0143, availableMargin: 43.303, mmr: 0.4, marginMode: 'isolated', leverage: 10 });
+  const [shortInputs, setShortInputs] = useState({ entryPrice: 4.386, size: 77, availableMargin: 6.622, mmr: 1, marginMode: 'isolated', leverage: 10 });
   const [tradeInputs, setTradeInputs] = useState({ size: 1, openingPrice: 60000, closingPrice: 65000, leverage: 10, vipLevel: 'VIP 0', openFeeType: 'taker', closeFeeType: 'taker' });
   const [liqScriptTab, setLiqScriptTab] = useState('long');
   const [pnlType, setPnlType] = useState('raw');
