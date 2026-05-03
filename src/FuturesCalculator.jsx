@@ -90,19 +90,27 @@ export default function FuturesCalculator({ data }) {
     ];
   }, []);
 
-  const [longInputs, setLongInputs] = useState({ entryPrice: 65000, leverage: 10, mmr: 0.5 });
-  const [shortInputs, setShortInputs] = useState({ entryPrice: 65000, leverage: 10, mmr: 0.5 });
+  const [longInputs, setLongInputs] = useState({ entryPrice: 62305.3, size: 0.0143, availableMargin: 43.303, mmr: 0.4 });
+  const [shortInputs, setShortInputs] = useState({ entryPrice: 4.386, size: 77, availableMargin: 6.622, mmr: 1 });
   const [tradeInputs, setTradeInputs] = useState({ size: 1, openingPrice: 60000, closingPrice: 65000, leverage: 10, vipLevel: 'VIP 0', openFeeType: 'taker', closeFeeType: 'taker' });
 
   // --- Calculations ---
   const liqPriceLong = useMemo(() => {
-    const { entryPrice, leverage, mmr } = longInputs;
-    return entryPrice ? entryPrice * (1 - (1 / leverage) + (mmr / 100)) : 0;
+    const { entryPrice, size, availableMargin, mmr } = longInputs;
+    if (!entryPrice || !size) return 0;
+    const mmrDec = mmr / 100;
+    const mmValue = size * mmrDec * entryPrice;
+    const val = entryPrice - ((availableMargin - mmValue) / size);
+    return val > 0 ? val : 0;
   }, [longInputs]);
 
   const liqPriceShort = useMemo(() => {
-    const { entryPrice, leverage, mmr } = shortInputs;
-    return entryPrice ? entryPrice * (1 + (1 / leverage) - (mmr / 100)) : 0;
+    const { entryPrice, size, availableMargin, mmr } = shortInputs;
+    if (!entryPrice || !size) return 0;
+    const mmrDec = mmr / 100;
+    const mmValue = size * mmrDec * entryPrice;
+    const val = entryPrice + ((availableMargin - mmValue) / size);
+    return val > 0 ? val : 0;
   }, [shortInputs]);
 
   const currentVip = useMemo(() => vipLevels.find(v => v.level === tradeInputs.vipLevel) || vipLevels[0], [vipLevels, tradeInputs.vipLevel]);
@@ -160,17 +168,35 @@ export default function FuturesCalculator({ data }) {
     `To calculate your fee: we multiply your position size by the entry/exit price and your VIP fee tier rate. For this trade, it equals $${feeCalcs.totalFees.toFixed(4)}.`
   ];
 
+  const generateLiqSteps = (type, inputs, liqPrice) => {
+    const { entryPrice, size, availableMargin, mmr } = inputs;
+    const mmrDec = mmr / 100;
+    const mmValue = size * mmrDec * entryPrice;
+    const marginMinusMM = availableMargin - mmValue;
+    const dividedBySize = marginMinusMM / size;
+    const sign = type === 'long' ? '-' : '+';
+    
+    return [
+      { label: `Formula (${type.toUpperCase()})`, formula: `Avg. Open Price ${sign} ((Available Margin - Position Size × MMR% × Avg. Open Price) ÷ Position Size)` },
+      { label: 'Step 1: Plug in values', formula: `${entryPrice} ${sign} ((${availableMargin} - (${size} × ${mmrDec} × ${entryPrice})) ÷ ${size})` },
+      { label: 'Step 2: Calculate MM Value', formula: `${entryPrice} ${sign} ((${availableMargin} - ${mmValue.toFixed(4)}) ÷ ${size})` },
+      { label: 'Step 3: Subtract from Margin', formula: `${entryPrice} ${sign} (${marginMinusMM.toFixed(4)} ÷ ${size})` },
+      { label: 'Step 4: Divide by Size', formula: `${entryPrice} ${sign} ${Math.abs(dividedBySize).toFixed(4)}`, result: `~${liqPrice.toFixed(4)}` }
+    ];
+  };
+
   const liqSteps = [
-    { label: 'Long Liquidation Formula', formula: `$${longInputs.entryPrice} * (1 - (1 / ${longInputs.leverage}) + (${longInputs.mmr} / 100))`, result: `$${liqPriceLong.toFixed(4)}` },
-    { label: 'Short Liquidation Formula', formula: `$${shortInputs.entryPrice} * (1 + (1 / ${shortInputs.leverage}) - (${shortInputs.mmr} / 100))`, result: `$${liqPriceShort.toFixed(4)}` }
+    ...generateLiqSteps('long', longInputs, liqPriceLong),
+    { label: '----------------', formula: '----------------------------------------' },
+    ...generateLiqSteps('short', shortInputs, liqPriceShort)
   ];
 
   const liqScripts = [
-    `Hello! For your Long position at $${longInputs.entryPrice} with ${longInputs.leverage}x leverage, your estimated liquidation price is $${liqPriceLong.toFixed(2)}.`,
-    `Hi there. Please be aware that if the mark price rises to $${liqPriceShort.toFixed(2)}, your Short position will be liquidated.`,
-    `Based on a maintenance margin rate of ${longInputs.mmr}%, your Long liquidation is triggered at $${liqPriceLong.toFixed(2)}.`,
-    `To avoid liquidation on your position, you can add more margin or lower your leverage before the price reaches the liquidation mark.`,
-    `Your Short position entered at $${shortInputs.entryPrice} will face liquidation at approximately $${liqPriceShort.toFixed(2)}.`
+    `Hello! Based on your position size of ${longInputs.size} and available margin of $${longInputs.availableMargin}, the liquidation price for your Long position at $${longInputs.entryPrice} is approximately $${liqPriceLong.toFixed(2)}.`,
+    `Hi there. For your Short position entered at $${shortInputs.entryPrice}, with $${shortInputs.availableMargin} in available margin, liquidation will be triggered if the price reaches $${liqPriceShort.toFixed(2)}.`,
+    `Liquidation happens when your margin ratio hits 100%. For your Long position, this occurs at a mark price of $${liqPriceLong.toFixed(2)}.`,
+    `Please note that your Short position will be liquidated at $${liqPriceShort.toFixed(2)}. You can add more margin to your Available Margin to delay this liquidation.`,
+    `To calculate your liquidation price, we use your entry price, position size, available margin, and the Maintenance Margin Rate (MMR). Based on those factors, your Long position liquidation is $${liqPriceLong.toFixed(2)}.`
   ];
 
   // Using a normal render function instead of a Component so it doesn't unmount
@@ -388,8 +414,9 @@ export default function FuturesCalculator({ data }) {
                 </div>
                 
                 <div className="space-y-5 mb-8">
-                  <InputField label="Entry Price" icon={DollarSign} value={longInputs.entryPrice} onChange={v => setLongInputs(p => ({...p, entryPrice: v}))} />
-                  <InputField label="Leverage" icon={BarChart3} value={longInputs.leverage} onChange={v => setLongInputs(p => ({...p, leverage: v}))} suffix="x" />
+                  <InputField label="Avg. Open Price" icon={DollarSign} value={longInputs.entryPrice} onChange={v => setLongInputs(p => ({...p, entryPrice: v}))} />
+                  <InputField label="Position Size" icon={Layers} value={longInputs.size} onChange={v => setLongInputs(p => ({...p, size: v}))} />
+                  <InputField label="Available Margin" icon={DollarSign} value={longInputs.availableMargin} onChange={v => setLongInputs(p => ({...p, availableMargin: v}))} />
                   <InputField label="Maintenance Margin Rate (MMR)" icon={Percent} value={longInputs.mmr} onChange={v => setLongInputs(p => ({...p, mmr: v}))} suffix="%" />
                 </div>
                 
@@ -410,8 +437,9 @@ export default function FuturesCalculator({ data }) {
                 </div>
                 
                 <div className="space-y-5 mb-8">
-                  <InputField label="Entry Price" icon={DollarSign} value={shortInputs.entryPrice} onChange={v => setShortInputs(p => ({...p, entryPrice: v}))} />
-                  <InputField label="Leverage" icon={BarChart3} value={shortInputs.leverage} onChange={v => setShortInputs(p => ({...p, leverage: v}))} suffix="x" />
+                  <InputField label="Avg. Open Price" icon={DollarSign} value={shortInputs.entryPrice} onChange={v => setShortInputs(p => ({...p, entryPrice: v}))} />
+                  <InputField label="Position Size" icon={Layers} value={shortInputs.size} onChange={v => setShortInputs(p => ({...p, size: v}))} />
+                  <InputField label="Available Margin" icon={DollarSign} value={shortInputs.availableMargin} onChange={v => setShortInputs(p => ({...p, availableMargin: v}))} />
                   <InputField label="Maintenance Margin Rate (MMR)" icon={Percent} value={shortInputs.mmr} onChange={v => setShortInputs(p => ({...p, mmr: v}))} suffix="%" />
                 </div>
                 
