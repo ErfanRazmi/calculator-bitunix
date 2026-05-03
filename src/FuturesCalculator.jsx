@@ -77,6 +77,14 @@ export default function FuturesCalculator({ data }) {
   const [activeTab, setActiveTab] = useState('fees');
   const [isDarkMode, setIsDarkMode] = useState(true);
 
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
   // --- Data Extraction & Parsing ---
   const vipLevels = useMemo(() => {
     return [
@@ -95,6 +103,7 @@ export default function FuturesCalculator({ data }) {
   const [shortInputs, setShortInputs] = useState({ entryPrice: 4.386, size: 77, availableMargin: 6.622, mmr: 1 });
   const [tradeInputs, setTradeInputs] = useState({ size: 1, openingPrice: 60000, closingPrice: 65000, leverage: 10, vipLevel: 'VIP 0', openFeeType: 'taker', closeFeeType: 'taker' });
   const [liqScriptTab, setLiqScriptTab] = useState('long');
+  const [pnlType, setPnlType] = useState('raw');
 
   // --- Calculations ---
   const liqPriceLong = useMemo(() => {
@@ -135,23 +144,41 @@ export default function FuturesCalculator({ data }) {
       closeFee,
       totalFees: openFee + closeFee,
       pnl,
+      netPnl: pnl - (openFee + closeFee),
       initialMargin,
-      roi: initialMargin > 0 ? (pnl / initialMargin) * 100 : 0
+      roi: initialMargin > 0 ? (pnl / initialMargin) * 100 : 0,
+      netRoi: initialMargin > 0 ? ((pnl - (openFee + closeFee)) / initialMargin) * 100 : 0
     };
   }, [tradeInputs, currentVip]);
 
-  const pnlSteps = [
+  const pnlStepsRaw = [
     { label: 'Initial Margin', formula: `(${tradeInputs.size} * $${tradeInputs.openingPrice}) / ${tradeInputs.leverage}`, result: `$${feeCalcs.initialMargin.toFixed(4)}` },
-    { label: 'Profit & Loss', formula: `${tradeInputs.size} * ($${tradeInputs.closingPrice} - $${tradeInputs.openingPrice})`, result: `$${feeCalcs.pnl.toFixed(4)}` },
-    { label: 'Return on Investment (ROI)', formula: `($${feeCalcs.pnl.toFixed(4)} / Initial Margin) * 100`, result: `${feeCalcs.roi.toFixed(2)}%` }
+    { label: 'Raw Profit & Loss', formula: `${tradeInputs.size} * ($${tradeInputs.closingPrice} - $${tradeInputs.openingPrice})`, result: `$${feeCalcs.pnl.toFixed(4)}` },
+    { label: 'Raw Return on Investment (ROI)', formula: `($${feeCalcs.pnl.toFixed(4)} / Initial Margin) * 100`, result: `${feeCalcs.roi.toFixed(2)}%` }
   ];
 
-  const pnlScripts = [
-    `Hello! Based on a position size of ${tradeInputs.size} at $${tradeInputs.openingPrice}, your estimated PnL when closing at $${tradeInputs.closingPrice} would be $${feeCalcs.pnl.toFixed(2)}.`,
-    `Hi there. Using ${tradeInputs.leverage}x leverage, your initial margin is $${feeCalcs.initialMargin.toFixed(2)}. The profit/loss for this trade is calculated at $${feeCalcs.pnl.toFixed(2)}.`,
-    `If your trade hits the $${tradeInputs.closingPrice} target, you will see a Return on Investment (ROI) of approximately ${feeCalcs.roi.toFixed(2)}%.`,
-    `To answer your question about PnL: a ${tradeInputs.size} unit trade from $${tradeInputs.openingPrice} to $${tradeInputs.closingPrice} results in a $${feeCalcs.pnl.toFixed(2)} change.`,
-    `Please note that your estimated PnL of $${feeCalcs.pnl.toFixed(2)} does not include trading fees. You can check the fees tab for the exact fee deductions.`
+  const pnlStepsNet = [
+    { label: 'Initial Margin', formula: `(${tradeInputs.size} * $${tradeInputs.openingPrice}) / ${tradeInputs.leverage}`, result: `$${feeCalcs.initialMargin.toFixed(4)}` },
+    { label: 'Raw Profit & Loss', formula: `${tradeInputs.size} * ($${tradeInputs.closingPrice} - $${tradeInputs.openingPrice})`, result: `$${feeCalcs.pnl.toFixed(4)}` },
+    { label: 'Total Fees', formula: `$${feeCalcs.openFee.toFixed(4)} + $${feeCalcs.closeFee.toFixed(4)}`, result: `$${feeCalcs.totalFees.toFixed(4)}` },
+    { label: 'Net Profit & Loss', formula: `Raw PnL - Total Fees`, result: `$${feeCalcs.netPnl.toFixed(4)}` },
+    { label: 'Net Return on Investment (ROI)', formula: `($${feeCalcs.netPnl.toFixed(4)} / Initial Margin) * 100`, result: `${feeCalcs.netRoi.toFixed(2)}%` }
+  ];
+
+  const pnlScriptsRaw = [
+    `Hello! Based on a position size of ${tradeInputs.size} at $${tradeInputs.openingPrice}, your estimated raw PnL when closing at $${tradeInputs.closingPrice} would be $${feeCalcs.pnl.toFixed(2)}.`,
+    `Hi there. Using ${tradeInputs.leverage}x leverage, your initial margin is $${feeCalcs.initialMargin.toFixed(2)}. The raw profit/loss for this trade is calculated at $${feeCalcs.pnl.toFixed(2)}.`,
+    `If your trade hits the $${tradeInputs.closingPrice} target, you will see a raw Return on Investment (ROI) of approximately ${feeCalcs.roi.toFixed(2)}%.`,
+    `To answer your question about PnL: a ${tradeInputs.size} unit trade from $${tradeInputs.openingPrice} to $${tradeInputs.closingPrice} results in a $${feeCalcs.pnl.toFixed(2)} change before fees.`,
+    `Please note that your estimated PnL of $${feeCalcs.pnl.toFixed(2)} does not include trading fees. You can check the Net PnL option for the exact fee deductions.`
+  ];
+
+  const pnlScriptsNet = [
+    `Hello! Based on a position size of ${tradeInputs.size} at $${tradeInputs.openingPrice}, your estimated Net PnL (after fees) when closing at $${tradeInputs.closingPrice} would be $${feeCalcs.netPnl.toFixed(2)}.`,
+    `Hi there. Using ${tradeInputs.leverage}x leverage, your initial margin is $${feeCalcs.initialMargin.toFixed(2)}. The Net profit/loss for this trade is calculated at $${feeCalcs.netPnl.toFixed(2)}.`,
+    `If your trade hits the $${tradeInputs.closingPrice} target, your net Return on Investment (ROI) after fee deduction will be approximately ${feeCalcs.netRoi.toFixed(2)}%.`,
+    `To answer your question about PnL: a ${tradeInputs.size} unit trade results in a Net PnL of $${feeCalcs.netPnl.toFixed(2)}, taking into account $${feeCalcs.totalFees.toFixed(2)} in total fees.`,
+    `Your Net PnL is calculated by subtracting your total estimated fees ($${feeCalcs.totalFees.toFixed(2)}) from your raw PnL ($${feeCalcs.pnl.toFixed(2)}), giving you exactly $${feeCalcs.netPnl.toFixed(2)}.`
   ];
 
   const feeSteps = [
@@ -278,7 +305,7 @@ export default function FuturesCalculator({ data }) {
   );
 
   return (
-    <div className={isDarkMode ? 'dark' : ''}>
+    <>
       <div className="flex flex-col md:flex-row min-h-screen bg-[#F8FAFC] dark:bg-gray-950 font-sans text-gray-800 dark:text-gray-200">
         {/* Sidebar */}
         <div className="w-full md:w-72 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 p-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 flex flex-col">
@@ -291,7 +318,7 @@ export default function FuturesCalculator({ data }) {
               <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">CS Agent Tool</span>
             </div>
           </div>
-          <nav className="space-y-1.5 flex-1">
+          <nav className="space-y-1.5 mb-8">
             {[
               { id: 'fees', label: 'Trading Fees', icon: Percent },
               { id: 'liquidation', label: 'Liquidation Price', icon: TrendingDown },
@@ -311,17 +338,19 @@ export default function FuturesCalculator({ data }) {
                 {tab.label}
               </button>
             ))}
+            
+            <div className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800">
+              <button 
+                onClick={() => setIsDarkMode(!isDarkMode)} 
+                className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <span className="flex items-center gap-3.5">
+                  {isDarkMode ? <Sun size={20} className="text-gray-400" /> : <Moon size={20} className="text-gray-400" />}
+                  {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                </span>
+              </button>
+            </div>
           </nav>
-          
-          <button 
-            onClick={() => setIsDarkMode(!isDarkMode)} 
-            className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 mt-6"
-          >
-            <span className="flex items-center gap-3.5">
-              {isDarkMode ? <Sun size={20} className="text-gray-400" /> : <Moon size={20} className="text-gray-400" />}
-              {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-            </span>
-          </button>
         </div>
 
         {/* Content */}
@@ -345,19 +374,34 @@ export default function FuturesCalculator({ data }) {
             {activeTab === 'pnl' && (
               <div className="space-y-6">
                 {renderSharedInputs()}
+                <div className="bg-white dark:bg-gray-900 p-2 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-[0_4px_15px_rgb(0,0,0,0.02)] flex justify-center w-full max-w-sm mx-auto mb-6">
+                  <button 
+                    onClick={() => setPnlType('raw')}
+                    className={`flex-1 py-2 px-4 rounded-xl font-bold text-sm transition-all duration-200 ${pnlType === 'raw' ? 'bg-gray-900 dark:bg-black text-white shadow-md' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+                  >
+                    Raw PnL
+                  </button>
+                  <button 
+                    onClick={() => setPnlType('net')}
+                    className={`flex-1 py-2 px-4 rounded-xl font-bold text-sm transition-all duration-200 ${pnlType === 'net' ? 'bg-[#B9F641] text-green-900 shadow-md' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+                  >
+                    Net PnL (After Fees)
+                  </button>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-gray-900 dark:bg-black p-8 rounded-3xl shadow-xl relative overflow-hidden group">
                     <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-[#B9F641] rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-500"></div>
                     <div className="flex justify-between items-start mb-4 relative z-10">
-                      <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Estimated PnL</p>
-                      <div className={`p-2 rounded-lg ${feeCalcs.pnl >= 0 ? 'bg-[#B9F641]/20 text-[#B9F641]' : 'bg-red-500/20 text-red-400'}`}>
-                        {feeCalcs.pnl >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                      <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Estimated PnL {pnlType === 'net' ? '(Net)' : '(Raw)'}</p>
+                      <div className={`p-2 rounded-lg ${(pnlType === 'net' ? feeCalcs.netPnl : feeCalcs.pnl) >= 0 ? 'bg-[#B9F641]/20 text-[#B9F641]' : 'bg-red-500/20 text-red-400'}`}>
+                        {(pnlType === 'net' ? feeCalcs.netPnl : feeCalcs.pnl) >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                       </div>
                     </div>
-                    <p className={`text-5xl font-black tracking-tight mb-2 relative z-10 ${feeCalcs.pnl >= 0 ? 'text-white dark:text-gray-100' : 'text-red-400'}`}>
-                      {feeCalcs.pnl >= 0 ? '+' : ''}${feeCalcs.pnl.toFixed(2)}
+                    <p className={`text-5xl font-black tracking-tight mb-2 relative z-10 ${(pnlType === 'net' ? feeCalcs.netPnl : feeCalcs.pnl) >= 0 ? 'text-white dark:text-gray-100' : 'text-red-400'}`}>
+                      {(pnlType === 'net' ? feeCalcs.netPnl : feeCalcs.pnl) >= 0 ? '+' : ''}${(pnlType === 'net' ? feeCalcs.netPnl : feeCalcs.pnl).toFixed(2)}
                     </p>
-                    <p className="text-gray-400 font-medium relative z-10">Profit & Loss before fees</p>
+                    <p className="text-gray-400 font-medium relative z-10">{pnlType === 'net' ? 'Profit & Loss after total fees' : 'Profit & Loss before fees'}</p>
                   </div>
                   
                   <div className="bg-[#B9F641] p-8 rounded-3xl shadow-xl relative overflow-hidden group text-gray-900 border border-[#a3da39] dark:border-[#B9F641]">
@@ -369,12 +413,15 @@ export default function FuturesCalculator({ data }) {
                       </div>
                     </div>
                     <p className="text-5xl font-black tracking-tight mb-2 relative z-10">
-                      {feeCalcs.roi > 0 ? '+' : ''}{feeCalcs.roi.toFixed(2)}%
+                      {(pnlType === 'net' ? feeCalcs.netRoi : feeCalcs.roi) > 0 ? '+' : ''}{(pnlType === 'net' ? feeCalcs.netRoi : feeCalcs.roi).toFixed(2)}%
                     </p>
-                    <p className="font-medium opacity-80 relative z-10">Based on initial margin</p>
+                    <p className="font-medium opacity-80 relative z-10">Based on initial margin {pnlType === 'net' ? '& net PnL' : '& raw PnL'}</p>
                   </div>
                 </div>
-                <ResultDetails steps={pnlSteps} scripts={pnlScripts} />
+                <ResultDetails 
+                  steps={pnlType === 'raw' ? pnlStepsRaw : pnlStepsNet} 
+                  scripts={pnlType === 'raw' ? pnlScriptsRaw : pnlScriptsNet} 
+                />
               </div>
             )}
 
@@ -559,6 +606,6 @@ export default function FuturesCalculator({ data }) {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
